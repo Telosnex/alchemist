@@ -86,32 +86,7 @@ void main() {
     });
 
     test(
-      'each goldenTest call registers a new setUp callback '
-      '(should register at most one)',
-      () async {
-        const n = 5;
-        for (var i = 0; i < n; i++) {
-          await goldenTest(
-            'test $i',
-            fileName: 'test_$i',
-            builder: () => const SizedBox(),
-          );
-        }
-
-        // BUG: every goldenTest() call appends another setUp callback.
-        // All of them point to _setUpGoldenTests, so they are redundant.
-        //
-        // EXPECTED (after fix): at most 1 setUp registration.
-        expect(
-          registeredSetUpCallbacks,
-          hasLength(n), // currently 5 — should be ≤ 1
-          reason: 'goldenTest registers a duplicate setUp on every call',
-        );
-      },
-    );
-
-    test(
-      'accumulated setUps cause O(N²) executions across all test runs',
+      'setUp is registered once and executions scale O(N) not O(N²)',
       () async {
         const n = 10;
         for (var i = 0; i < n; i++) {
@@ -121,6 +96,14 @@ void main() {
             builder: () => const SizedBox(),
           );
         }
+
+        // FIXED: only one setUp callback should be registered regardless
+        // of how many goldenTest() calls are made.
+        expect(
+          registeredSetUpCallbacks,
+          hasLength(1),
+          reason: 'goldenTest should register setUp at most once',
+        );
 
         // --- Simulate what flutter_test does at runtime ---
         //
@@ -135,8 +118,6 @@ void main() {
         for (final (variant, _) in registeredTests) {
           final variantCount = variant.values.length;
           for (var v = 0; v < variantCount; v++) {
-            // Before each variant run flutter_test executes ALL registered
-            // setUp callbacks.
             totalSetUpExecutions += registeredSetUpCallbacks.length;
           }
         }
@@ -144,19 +125,17 @@ void main() {
         // With default AlchemistConfig both platform and CI are enabled,
         // so each test has 2 variant values.
         //
-        // Registered setUps  : N       (should be 1)
+        // Registered setUps  : 1
         // Registered tests   : N
         // Variants per test  : 2
-        // Total setUp calls  : N × N × 2 = 2N²
-        //
-        // For N = 10 this is 200.  For N = 100 this is 20 000.
+        // Total setUp calls  : N × 1 × 2 = 2N
         expect(registeredTests, hasLength(n));
         expect(
           totalSetUpExecutions,
-          2 * n * n, // 200 — should be 2 * n (i.e., 20)
+          2 * n, // 20 — linear, not quadratic
           reason:
-              'setUp accumulation causes O(N²) executions '
-              '($totalSetUpExecutions instead of ${2 * n})',
+              'setUp should execute O(N) times '
+              '($totalSetUpExecutions instead of expected ${2 * n})',
         );
       },
     );
