@@ -29,11 +29,10 @@ Future<void> testExecutable(FutureOr<void> Function() testMain) async {
   final version = flutterData['flutterVersion'] as String;
 
   if (!version.isValidVersion()) {
-    throw ProcessException(
-      'flutter',
-      ['--version', '--machine'],
-      'Invalid flutter version returned by `flutter version`: $version',
-    );
+    throw ProcessException('flutter', [
+      '--version',
+      '--machine',
+    ], 'Invalid flutter version returned by `flutter version`: $version');
   }
 
   final parsedVersion = Version.parse(version);

@@ -22,7 +22,7 @@ void main() {
 
     // Stores every (variant, callback) pair passed to testWidgets.
     late List<(TestVariant<Object?>, Future<void> Function(WidgetTester))>
-        registeredTests;
+    registeredTests;
 
     late MockGoldenTestRunner runner;
 
@@ -44,18 +44,19 @@ void main() {
       };
 
       // Intercept testWidgets: record the test but don't execute it yet.
-      testWidgetsFn = (
-        String description,
-        Future<void> Function(WidgetTester) callback, {
-        bool? skip,
-        Timeout? timeout,
-        bool semanticsEnabled = true,
-        TestVariant<Object?> variant = const DefaultTestVariant(),
-        dynamic tags,
-        int? retry,
-      }) {
-        registeredTests.add((variant, callback));
-      };
+      testWidgetsFn =
+          (
+            String description,
+            Future<void> Function(WidgetTester) callback, {
+            bool? skip,
+            Timeout? timeout,
+            bool semanticsEnabled = true,
+            TestVariant<Object?> variant = const DefaultTestVariant(),
+            dynamic tags,
+            int? retry,
+          }) {
+            registeredTests.add((variant, callback));
+          };
 
       when(
         () => runner.run(
@@ -85,59 +86,21 @@ void main() {
       testWidgetsFn = defaultTestWidgetsFn;
     });
 
-    test(
-      'setUp is registered once and executions scale O(N) not O(N²)',
-      () async {
-        const n = 10;
-        for (var i = 0; i < n; i++) {
-          await goldenTest(
-            'test $i',
-            fileName: 'test_$i',
-            builder: () => const SizedBox(),
-          );
-        }
-
-        // FIXED: only one setUp callback should be registered regardless
-        // of how many goldenTest() calls are made.
-        expect(
-          registeredSetUpCallbacks,
-          hasLength(1),
-          reason: 'goldenTest should register setUp at most once',
+    test('goldenTest registers no setUp: each test body sets up', () async {
+      const n = 10;
+      for (var i = 0; i < n; i++) {
+        await goldenTest(
+          'test $i',
+          fileName: 'test_$i',
+          builder: () => const SizedBox(),
         );
+      }
 
-        // --- Simulate what flutter_test does at runtime ---
-        //
-        // flutter_test runs every registered setUp callback before each
-        // test invocation.  With TestVariant producing V values per test,
-        // each test runs V times.
-        //
-        // Total setUp body executions =
-        //   (# tests) × (# variant values per test) × (# setUp callbacks)
-
-        var totalSetUpExecutions = 0;
-        for (final (variant, _) in registeredTests) {
-          final variantCount = variant.values.length;
-          for (var v = 0; v < variantCount; v++) {
-            totalSetUpExecutions += registeredSetUpCallbacks.length;
-          }
-        }
-
-        // With default AlchemistConfig both platform and CI are enabled,
-        // so each test has 2 variant values.
-        //
-        // Registered setUps  : 1
-        // Registered tests   : N
-        // Variants per test  : 2
-        // Total setUp calls  : N × 1 × 2 = 2N
-        expect(registeredTests, hasLength(n));
-        expect(
-          totalSetUpExecutions,
-          2 * n, // 20 — linear, not quadratic
-          reason:
-              'setUp should execute O(N) times '
-              '($totalSetUpExecutions instead of expected ${2 * n})',
-        );
-      },
-    );
+      // No setUp: a setUp per call ran N times before each of N tests
+      // (O(N²)); one setUp belongs to the first group only. The test body
+      // loads the fonts (a no-op once loaded).
+      expect(registeredSetUpCallbacks, isEmpty);
+      expect(registeredTests, hasLength(n));
+    });
   });
 }

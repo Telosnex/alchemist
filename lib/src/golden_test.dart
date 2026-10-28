@@ -12,7 +12,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:meta/meta.dart';
 
 final Set<String> _loadedFontFamilies = {};
-bool _goldenTestSetUpRegistered = false;
 
 /// Default golden test runner which uses the flutter test framework.
 const defaultGoldenTestRunner = FlutterGoldenTestRunner();
@@ -169,14 +168,14 @@ Future<void> goldenTest(
     currentPlatform: currentPlatform,
   );
 
-  if (!_goldenTestSetUpRegistered) {
-    _goldenTestSetUpRegistered = true;
-    goldenTestAdapter.setUp(_setUpGoldenTests);
-  }
-
   await goldenTestAdapter.testWidgets(
     description,
     (tester) async {
+      // In the test body, not a setUp: a setUp per goldenTest call runs
+      // N times before each of N tests (O(N²)), and a setUp registered once
+      // belongs to one group only, so a test of another group run alone
+      // would not load fonts. Loading is a no-op once the fonts are loaded.
+      await _setUpGoldenTests();
       final variantConfig = variant.currentConfig;
       await goldenTestRunner.run(
         tester: tester,
