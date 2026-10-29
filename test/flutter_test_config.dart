@@ -12,10 +12,12 @@ Future<void> testExecutable(FutureOr<void> Function() testMain) async {
   final runningOnCi = Platform.environment.containsKey('GITHUB_ACTIONS');
 
   // Grab the flutter version from the current environment.
+  // runInShell: on Windows the SDK is flutter.bat, which Process.run does not
+  // find by name.
   final versionResult = await Process.run('flutter', [
     '--version',
     '--machine',
-  ]);
+  ], runInShell: Platform.isWindows);
 
   if (versionResult.exitCode != 0) {
     throw const ProcessException('flutter', [
@@ -106,7 +108,14 @@ Future<void> testExecutable(FutureOr<void> Function() testMain) async {
       ),
       ciGoldensConfig: AlchemistConfig.current()
           .ciGoldensConfig //
-          .copyWith(filePathResolver: filePathResolver, enabled: runningOnCi),
+          .copyWith(
+            filePathResolver: filePathResolver,
+            enabled: runningOnCi,
+            // The same golden differs by up to ~0.1% of pixels between the
+            // macOS, Linux and Windows runners (anti-aliasing of text and
+            // shadows). Anything larger is a real change.
+            diffThreshold: 0.005,
+          ),
       platformGoldensConfig: AlchemistConfig.current()
           .platformGoldensConfig //
           .copyWith(filePathResolver: filePathResolver, enabled: !runningOnCi),
