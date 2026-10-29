@@ -4,9 +4,9 @@ import 'dart:ui' as ui;
 import 'package:alchemist/alchemist.dart';
 import 'package:alchemist/src/utilities.dart';
 import 'package:cupertino_ui/cupertino_ui.dart';
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// The function signature of Flutter test's `testWidgets` function.
 typedef TestWidgetsFn =
@@ -233,7 +233,7 @@ class FlutterGoldenTestAdapter extends GoldenTestAdapter {
     tester.view.devicePixelRatio = 1.0;
     tester.platformDispatcher.textScaleFactorTestValue = textScaleFactor;
 
-    goldenTestTheme ??= GoldenTestTheme.standard();
+    final theme = goldenTestTheme ?? GoldenTestTheme.standard();
 
     await pumpWidget(
       tester,
@@ -242,7 +242,7 @@ class FlutterGoldenTestAdapter extends GoldenTestAdapter {
         obscureFont: obscureFont,
         globalConfigTheme: globalConfigTheme,
         variantConfigTheme: variantConfigTheme,
-        goldenTestTheme: goldenTestTheme,
+        goldenTestTheme: theme,
         child: DefaultAssetBundle(
           bundle: TestAssetBundle(),
           child: Material(
@@ -252,7 +252,7 @@ class FlutterGoldenTestAdapter extends GoldenTestAdapter {
               child: Builder(
                 builder: (context) {
                   return ColoredBox(
-                    color: goldenTestTheme!.backgroundColor,
+                    color: theme.backgroundColor,
                     child: OverflowBox(
                       alignment: Alignment.topLeft,
                       minWidth: constraints.minWidth,
@@ -261,10 +261,7 @@ class FlutterGoldenTestAdapter extends GoldenTestAdapter {
                       maxHeight: constraints.maxHeight,
                       child: Center(
                         key: childKey,
-                        child: Padding(
-                          padding: goldenTestTheme.padding,
-                          child: widget,
-                        ),
+                        child: Padding(padding: theme.padding, child: widget),
                       ),
                     ),
                   );

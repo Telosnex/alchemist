@@ -9,8 +9,8 @@ import 'package:alchemist/src/pumps.dart';
 import 'package:alchemist/src/utilities.dart';
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:flutter/foundation.dart';
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockBlockedPaintingContext extends Mock
