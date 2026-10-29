@@ -24,9 +24,10 @@ void main() {
     goldenTest(
       'succeeds after tapping button with timer',
       fileName: 'timer_button_smoke_test',
-      // Windows: the golden matcher receives a Future<Image> and does not
-      // match; macOS and Linux match the same golden.
-      skip: Platform.isWindows,
+      // macOS and Windows: the golden matcher receives a Future<Image> and
+      // does not match, while the same golden matches on Linux. Run on Linux
+      // only until that is fixed.
+      skip: !Platform.isLinux,
       pumpBeforeTest: (tester) async {
         await tester.tap(find.byType(TimerButton));
         await tester.pumpAndSettle();
