@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:alchemist/src/golden_test.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -10,11 +9,19 @@ class TimerButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      child: const Text('Button'),
-      onPressed: () {
-        Timer(Duration.zero, () {});
-      },
+    // A fixed size: the golden must not depend on the text width. Linux
+    // measures the 6 Ahem glyphs as 83.9996 px, macOS as 84 px. A button
+    // sized by its text is then a fraction of a pixel narrower on Linux, and
+    // its antialiased right edge is a 30 px diff in this small image.
+    return SizedBox(
+      width: 120,
+      height: 48,
+      child: ElevatedButton(
+        child: const Text('Button'),
+        onPressed: () {
+          Timer(Duration.zero, () {});
+        },
+      ),
     );
   }
 }
@@ -24,10 +31,6 @@ void main() {
     goldenTest(
       'succeeds after tapping button with timer',
       fileName: 'timer_button_smoke_test',
-      // macOS and Windows: the golden matcher receives a Future<Image> and
-      // does not match, while the same golden matches on Linux. Run on Linux
-      // only until that is fixed.
-      skip: !Platform.isLinux,
       pumpBeforeTest: (tester) async {
         await tester.tap(find.byType(TimerButton));
         await tester.pumpAndSettle();

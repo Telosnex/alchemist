@@ -37,7 +37,15 @@ Future<void> _setUpGoldenTests() async {
 @visibleForTesting
 Future<void> loadFonts() async {
   final bundle = rootBundle;
-  final fontManifestString = await bundle.loadString('FontManifest.json');
+  // cache: false. goldenTest calls this in each test body, where flutter_test
+  // runs code in a fake-async zone. A cached future belongs to the zone of
+  // the test that first loaded it, and that zone does not run microtasks
+  // after its test ends. A later test that awaits the cached future never
+  // continues.
+  final fontManifestString = await bundle.loadString(
+    'FontManifest.json',
+    cache: false,
+  );
   final fontManifest = (json.decode(fontManifestString) as List<dynamic>).map(
     (dynamic x) => x as Map<String, dynamic>,
   );
