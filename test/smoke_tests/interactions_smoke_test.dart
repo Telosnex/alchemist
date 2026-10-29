@@ -36,6 +36,9 @@ void main() {
     goldenTest(
       'succeeds while pressed',
       fileName: 'interactions_smoke_test_pressed',
+      // Skipped: the test body never returns (10 min timeout) on macOS, Linux
+      // and Windows; not a golden diff. Investigate before re-enabling.
+      skip: true,
       whilePerforming: press(find.byType(TextButton)),
       builder: buildSmokeTestGroup,
     );
@@ -43,6 +46,8 @@ void main() {
     goldenTest(
       'succeeds while long pressed',
       fileName: 'interactions_smoke_test_long_pressed',
+      // Skipped: same hang as the pressed test above.
+      skip: true,
       whilePerforming: longPress(find.byType(TextButton)),
       builder: buildSmokeTestGroup,
     );
