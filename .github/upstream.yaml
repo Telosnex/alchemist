@@ -6,5 +6,5 @@ sources:
   # commit is a week old.
   - name: Betterment/alchemist
     branch: https://github.com/Betterment/alchemist
-    pin: a462226801e7d77dd0c71ab5293265a1c869e2a3
+    pin: b13af251a765877961b1eb4e16833cf54a797b86
     lag_days: 7
